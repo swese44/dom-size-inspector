@@ -1,5 +1,10 @@
+export interface InjectScriptMessage {
+  readonly tabId: number;
+  readonly scriptToInject: string;
+}
+
 chrome.runtime.onConnect.addListener(function (devToolsConnection) {
-  const devToolsListener = (message) => {
+  const devToolsListener = (message: InjectScriptMessage) => {
     chrome.tabs.executeScript(message.tabId, { file: message.scriptToInject });
   };
 

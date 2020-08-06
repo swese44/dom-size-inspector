@@ -1,12 +1,28 @@
 const overlayId = "dom-size-extension-overlay-canvas";
-let overlay;
-let ctx;
 
-const hostnameOverrides = {
+interface HostnameOverride {
+  readonly selector: string;
+}
+type HostnameOverrides = Record<string, HostnameOverride>;
+const hostnameOverrides: HostnameOverrides = {
   "www.youtube.com": { selector: "ytd-app" },
 };
 
+type GetCanvasElement = () => HTMLCanvasElement | null;
+const getCanvasElement: GetCanvasElement = () =>
+  document.querySelector(`#${overlayId}`);
+
 function showOverlay() {
+  const canvas: HTMLCanvasElement | null = getCanvasElement();
+  if (!canvas) {
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return;
+  }
+
   const totalDomNodes = getTotalDomNodes();
   const maxDepth = getMaxDepth();
 
@@ -38,62 +54,77 @@ function showOverlay() {
   ctx.strokeStyle = "rgba(255, 0, 0, .25)";
   ctx.strokeRect(boxPadding, boxTopOffset, boxWidth, boxHeight);
 
-  document.body.append(overlay);
+  canvas.style.display = "block";
 }
 
-function hideOverlay() {
-  try {
-    document.body.removeChild(document.querySelector(`#${overlayId}`));
-  } catch (e) {}
-}
-
-function getBodyElement() {
-  const override = hostnameOverrides[window.location.hostname];
-  if (override) {
-    return document.querySelector(override.selector);
+function destroyOverlay() {
+  const canvas = getCanvasElement();
+  if (canvas) {
+    document.body.removeChild(canvas);
   }
+}
 
-  return document.body;
+function getBodyElement(): Element {
+  const override = hostnameOverrides[window.location.hostname];
+  const overrideElement = override
+    ? document.querySelector(override.selector)
+    : null;
+  return overrideElement || document.body;
 }
 
 function resetCanvas() {
-  hideOverlay();
+  destroyOverlay();
 
   const bodyElement = getBodyElement();
 
-  overlay = document.createElement("canvas");
-  overlay.id = overlayId;
+  const canvas = document.createElement("canvas");
+  canvas.id = overlayId;
 
-  // Move these styles to a CSS file
-  overlay.style.position = "absolute";
-  overlay.style.top = "0px";
-  overlay.style.right = "0px";
-  overlay.style.bottom = "0px";
-  overlay.style.left = "0px";
-  overlay.style.zIndex = 99999999999;
-  overlay.style.pointerEvents = "none";
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return;
+  }
 
-  overlay.height = bodyElement.clientHeight;
-  overlay.width = bodyElement.clientWidth;
+  canvas.style.position = "absolute";
+  canvas.style.top = "0px";
+  canvas.style.right = "0px";
+  canvas.style.bottom = "0px";
+  canvas.style.left = "0px";
+  canvas.style.zIndex = "99999999999";
+  canvas.style.pointerEvents = "none";
+  canvas.style.display = "none";
 
-  ctx = overlay.getContext("2d");
+  canvas.height = bodyElement.clientHeight;
+  canvas.width = bodyElement.clientWidth;
+
   ctx.globalCompositeOperation = "multiply";
 
   ctx.fillStyle = "rgba(255, 255, 255, .25)";
-  ctx.fillRect(0, 0, overlay.width, overlay.height);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // ctx.clearRect(0, 0, overlay.width, overlay.height);
-
+  document.body.append(canvas);
   window.scrollTo(0, 0);
 }
 
-function highlightElementInCanvas(element, opacity = 0.03) {
+function highlightElementInCanvas(
+  element: Element,
+  canvas: HTMLCanvasElement | null,
+  opacity = 0.03
+) {
   const rect = element.getBoundingClientRect();
   const x = rect.left;
   const y = rect.top;
   const width = rect.right - rect.left;
   const height = rect.bottom - rect.top;
-  // console.log(`${x}, ${y}, ${width}, ${height}`);
+
+  if (!canvas) {
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return;
+  }
 
   ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`;
   ctx.fillRect(x, y, width, height);
@@ -103,7 +134,17 @@ function highlightElementInCanvas(element, opacity = 0.03) {
   ctx.strokeRect(x, y, width, height);
 }
 
-function drawLineToElementInCanvas(element) {
+function drawLineToElementInCanvas(element: Element) {
+  const canvas = getCanvasElement();
+  if (!canvas) {
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return;
+  }
+
   const lineWidth = 10;
 
   const rect = element.getBoundingClientRect();
@@ -132,15 +173,21 @@ function getTotalDomNodes() {
 
 function highlightAllElements() {
   resetCanvas();
-  document.querySelectorAll("*").forEach((el) => highlightElementInCanvas(el));
+  const canvas = getCanvasElement();
+
+  document
+    .querySelectorAll("*")
+    .forEach((el) => highlightElementInCanvas(el, canvas));
   showOverlay();
 }
 
 function highlightElementsWithMoreThanSixtyChildElements() {
   resetCanvas();
+  const canvas = getCanvasElement();
+
   document.querySelectorAll("*").forEach((el) => {
     if (el.childNodes.length > 60) {
-      highlightElementInCanvas(el);
+      highlightElementInCanvas(el, canvas);
     }
   });
   showOverlay();
@@ -148,6 +195,7 @@ function highlightElementsWithMoreThanSixtyChildElements() {
 
 function highlightElementsWithDeepNesting() {
   resetCanvas();
+  const canvas = getCanvasElement();
 
   const highlightedElements = new Map();
   let depth = 1;
@@ -159,7 +207,7 @@ function highlightElementsWithDeepNesting() {
     if (depth >= 15) {
       deepElements.forEach((el) => {
         if (!highlightedElements.has(el)) {
-          highlightElementInCanvas(el);
+          highlightElementInCanvas(el, canvas);
           highlightedElements.set(el, el);
         }
       });
@@ -172,13 +220,15 @@ function highlightElementsWithDeepNesting() {
   showOverlay();
 }
 
-function highlightDeepestNestedElements() {
+function highlightDeepestNestedElement() {
   resetCanvas();
+  const canvas = getCanvasElement();
 
   let selector = "*";
-  let element = document.querySelector(selector);
+  let element: Element;
+  element = document.querySelector(selector) as Element;
   while (document.querySelector(selector)) {
-    element = document.querySelector(selector);
+    element = document.querySelector(selector) as Element;
     selector += " > *";
   }
 
@@ -186,7 +236,7 @@ function highlightDeepestNestedElements() {
   let level = 0;
   const maxDepth = getMaxDepth();
   while (traversedElement.parentElement && level < maxDepth / 2) {
-    highlightElementInCanvas(traversedElement);
+    highlightElementInCanvas(traversedElement, canvas);
     traversedElement = traversedElement.parentElement;
     level++;
   }
@@ -198,10 +248,11 @@ function highlightDeepestNestedElements() {
 
 function highlightElementsWithSingleChild() {
   resetCanvas();
+  const canvas = getCanvasElement();
 
   document.querySelectorAll("*").forEach((el) => {
     if (el.childNodes.length === 1) {
-      highlightElementInCanvas(el);
+      highlightElementInCanvas(el, canvas);
     }
   });
 
@@ -210,23 +261,25 @@ function highlightElementsWithSingleChild() {
 
 function highlightEmptyElements() {
   resetCanvas();
+  const canvas = getCanvasElement();
 
   document.querySelectorAll("*:not(img)").forEach((el) => {
     if (!el.childNodes.length) {
-      highlightElementInCanvas(el);
+      highlightElementInCanvas(el, canvas);
     }
   });
 
   showOverlay();
 }
 
-function getClasslessWrapperElements() {
+function highlightClasslessWrapperElements() {
   resetCanvas();
+  const canvas = getCanvasElement();
 
   document
     .querySelectorAll("div:not([class]), span:not([class])")
     .forEach((el) => {
-      highlightElementInCanvas(el);
+      highlightElementInCanvas(el, canvas);
     });
 
   showOverlay();

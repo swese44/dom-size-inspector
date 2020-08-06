@@ -1,3 +1,5 @@
+import { InjectScriptMessage } from "./background";
+
 var backgroundPageConnection = chrome.runtime.connect({
   name: "devtools-page",
 });
@@ -9,78 +11,34 @@ function injectContentScript() {
   });
 }
 
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+function attachClick(scriptId: string) {
+  const element = document.getElementById(scriptId);
+  if (!element) {
+    return;
+  }
+
+  element.addEventListener("click", () => {
+    const injectScriptMessage: InjectScriptMessage = {
+      tabId: chrome.devtools.inspectedWindow.tabId,
+      scriptToInject: `./${scriptId}.js`,
+    };
+    backgroundPageConnection.postMessage(injectScriptMessage);
+  });
+}
+
+chrome.tabs.onUpdated.addListener(function (_tabId, changeInfo, tab) {
   if (changeInfo.status == "complete" && tab.active) {
     injectContentScript();
   }
 });
 
-document
-  .getElementById("highlight_deep_nodes")
-  .addEventListener("click", () => {
-    backgroundPageConnection.postMessage({
-      tabId: chrome.devtools.inspectedWindow.tabId,
-      scriptToInject: "./highlightDeepNodes.js",
-    });
-  });
-
-document
-  .getElementById("highlight_deepest_nodes")
-  .addEventListener("click", () => {
-    backgroundPageConnection.postMessage({
-      tabId: chrome.devtools.inspectedWindow.tabId,
-      scriptToInject: "./highlightDeepestNodes.js",
-    });
-  });
-
-document
-  .getElementById("highlight_single_child_nodes")
-  .addEventListener("click", () => {
-    backgroundPageConnection.postMessage({
-      tabId: chrome.devtools.inspectedWindow.tabId,
-      scriptToInject: "./highlightElementsWithSingleChild.js",
-    });
-  });
-
-document
-  .getElementById("highlight_empty_nodes")
-  .addEventListener("click", () => {
-    backgroundPageConnection.postMessage({
-      tabId: chrome.devtools.inspectedWindow.tabId,
-      scriptToInject: "./highlightEmptyElements.js",
-    });
-  });
-
-document
-  .getElementById("highlight_classless_nodes")
-  .addEventListener("click", () => {
-    backgroundPageConnection.postMessage({
-      tabId: chrome.devtools.inspectedWindow.tabId,
-      scriptToInject: "./getClasslessWrapperElements.js",
-    });
-  });
-
-document
-  .getElementById("highlight_large_parent_nodes")
-  .addEventListener("click", () => {
-    backgroundPageConnection.postMessage({
-      tabId: chrome.devtools.inspectedWindow.tabId,
-      scriptToInject: "./highlightElementsWithMoreThanSixtyChildElements.js",
-    });
-  });
-
-document.getElementById("highlight_all_nodes").addEventListener("click", () => {
-  backgroundPageConnection.postMessage({
-    tabId: chrome.devtools.inspectedWindow.tabId,
-    scriptToInject: "./highlightAllElements.js",
-  });
-});
-
-document.getElementById("hide_overlay").addEventListener("click", () => {
-  backgroundPageConnection.postMessage({
-    tabId: chrome.devtools.inspectedWindow.tabId,
-    scriptToInject: "./hideOverlay.js",
-  });
-});
+attachClick("highlightDeepNodes");
+attachClick("highlightDeepestNestedElement");
+attachClick("highlightElementsWithSingleChild");
+attachClick("highlightEmptyElements");
+attachClick("highlightClasslessWrapperElements");
+attachClick("highlightElementsWithMoreThanSixtyChildElements");
+attachClick("highlightAllElements");
+attachClick("destroyOverlay");
 
 injectContentScript();
