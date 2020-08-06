@@ -1,6 +1,6 @@
 {
   "name": "DOM Size Inspector",
-  "version": "0.0.1",
+  "version": "@VERSION@",
   "description": "Tools to identify DOM bloat - unnecessary DOM nodes, deeply-nested elements, etc.",
   "background": {
     "scripts": ["background.js"],
