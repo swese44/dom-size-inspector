@@ -1,0 +1,29 @@
+{
+  "name": "dom-size-inspector",
+  "version": "0.0.2",
+  "description": "A Chrome browser extension to highlight heavy DOM nodes and show opportunities for reducing elements. Also shows total number of DOM nodes and max depth.",
+  "main": "index.js",
+  "scripts": {
+    "commit": "npx git-cz",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swese44/dom-size-inspector.git"
+  },
+  "keywords": [
+    "chrome",
+    "extension",
+    "dom",
+    "html",
+    "elements",
+    "depth",
+    "nodes"
+  ],
+  "author": "swese44",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/swese44/dom-size-inspector/issues"
+  },
+  "homepage": "https://github.com/swese44/dom-size-inspector"
+}

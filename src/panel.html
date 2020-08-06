@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>DOM Size browser extension</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      button {
+        font-family: sans-serif;
+        font-size: 16px;
+        line-height: 20px;
+        padding: 12px 17px;
+        border: none;
+        border-radius: 4px;
+        background-color: #eee;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #dedede;
+      }
+      button:active,
+      button:focus {
+        background-color: #ddd;
+        border: none;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="highlight_deep_nodes">Deeply-nested nodes</button>
+
+    <button id="highlight_deepest_nodes">Deepest-nested nodes</button>
+
+    <button id="highlight_single_child_nodes">Elements with 1 child</button>
+
+    <button id="highlight_empty_nodes">Empty elements</button>
+
+    <button id="highlight_classless_nodes">Classless elements</button>
+
+    <button id="highlight_large_parent_nodes">Nodes with 60+ children</button>
+
+    <button id="highlight_all_nodes">All nodes</button>
+
+    &nbsp;&nbsp;&nbsp;
+
+    <button id="hide_overlay">Clear overlay</button>
+
+    <script src="./panel.js"></script>
+  </body>
+</html>
