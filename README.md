@@ -6,6 +6,6 @@ https://chrome.google.com/webstore/detail/dom-size-inspector/akaionidnagpoippeif
 
 ![Highlighting deeply-nested DOM nodes](./img/dom-size-inspector-deeplyNested.png)
 
-![Highlighting the deepest-nested DOM nodes](./img/dom-size-inspector-deeplyNested.png)
+![Highlighting the deepest-nested DOM nodes](./img/dom-size-inspector-deepestNested.png)
 
-![Highlighting DOM nodes with only one child](./img/dom-size-inspector-deeplyNested.png)
+![Highlighting DOM nodes with only one child](./img/dom-size-inspector-oneChild.png)
